@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Server-Sent Events Example</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<link rel="stylesheet" type="text/css"
+	href="webjars/bootstrap/3.3.7/css/bootstrap.min.css" />
+
+<script>
+
+	var connect = function() {
+		var source = new EventSource('/register');
+		// Handle correct opening of connection
+		source.addEventListener('open', function(e) {
+			console.log('Connected.');
+		});
+
+		// Update the state when ever a message is sent
+		source.addEventListener('message', function(e) {
+			var state = JSON.parse(e.data);
+			console.log("New value: " + state.value);
+			if(state.value % 10 == 0) {
+				notify(state.value);
+			}
+			var element = document.getElementById("state");
+			element.innerHTML = state.value;
+		}, false);
+		// Reconnect if the connection fails
+		source.addEventListener('error', function(e) {
+			console.log('Disconnected.');
+			if (e.readyState == EventSource.CLOSED) {
+				connected = false;
+				connect();
+			}
+		}, false);
+	}
+	
+	var notify = function(state) {
+		if (!Notification) {
+		    alert('Desktop notifications not available in your browser. Try Chromium.'); 
+		    return;
+		  }
+
+		  if (Notification.permission !== "granted")
+		    Notification.requestPermission();
+		  else {
+		    var notification = new Notification('Notification title', {
+		      icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
+		      body: "You've been notified! - " + state,
+		    });
+
+		    notification.onclick = function () {
+		      window.open("http://www.google.com/");      
+		    };
+		    
+		  }
+	}
+	
+</script>
+
+</head>
+<body>
+
+	<nav class="navbar navbar-inverse">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#">Server-Sent Events Example</a>
+			</div>
+			<div id="navbar" class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">
+					<li class="active"><a href="#">Home</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container">
+
+		<div class="starter-template">
+			<h1>Server-Sent Events Example</h1>
+			<h2>
+				App status: <span id="state" th:text="${state.value}"></span>
+			</h2>
+			<button onclick="connect()">Connect</button>
+		</div>
+
+	</div>
+	<!-- /.container -->
+
+	<script type="text/javascript"
+		src="webjars/jquery/3.2.1/jquery.min.js"></script>
+	<script type="text/javascript"
+		src="webjars/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</body>
+</html>
